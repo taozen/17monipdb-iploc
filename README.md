@@ -10,7 +10,7 @@ Why do I bother with creating a new C API for the 17monipdb given the fact that
 there've already been [official](https://www.ipip.net/download.html#ip_code) and
 [3rd-party](https://www.ipip.net/download.html#ip_code2) ones?
 
-* `The official C API is buggy and somewhat low efficient for unknown reason`
+* `The official C API is buggy and inefficient to some extent`
 * `The code of a 3rd-party C API investigated is badly tasted`
 
 ## Example

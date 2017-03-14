@@ -60,9 +60,9 @@ static inline uint decode_uint32_le(byte *b)
 
 struct _ip_db_t
 {
-    uint hint[256]; // counter for each IP segment
+    uint hint[256]; // number of indexed IP in each IP segment
     uint num_index; // total number of indexed IP in the DB
-    byte *raw;      // raw db data copied from file
+    byte *raw;      // raw data copied from 17MON DB file
     byte *index;    // pointer to the first index
     byte *text;     // pointer to ip description section
 };
@@ -202,7 +202,8 @@ ip_locate_v(ip_db_t *db, uint32_t ip_val, char *result)
     byte *pos = db->index + high*8;
     uint offset = decode_uint24_le(pos + 4);
     uint len = pos[7];
-    strncpy(result, db->text + offset - 1024, len);
+    const char *src = (const char*)(db->text + offset - 1024);
+    strncpy(result, src, len);
     result[len] = 0;
     return 0;
 }

@@ -1,8 +1,8 @@
 iploc.o: iploc.c
-	gcc -g -O2 -c iploc.c
+	gcc -Wall -g -O2 -c iploc.c
 
 test-proc: iploc.o test.c
-	gcc -g -O2 test.c iploc.o -o test-proc
+	gcc -Wall -g -O2 test.c iploc.o -o test-proc
 
 test: test-proc
 	./test-proc
