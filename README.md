@@ -2,7 +2,7 @@
 
 The [17MON IP database](https://www.ipip.net) is being actively built from massive probing data, and is in return 
 widely used by Chinese Internet corporations. iploc provides a minimalistic set of C API that parses 17monipdb.dat 
-and searches an IP for its location infomation.
+and searches for an IP's location infomation.
 
 ## Initiative
 
