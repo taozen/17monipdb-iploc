@@ -1,8 +1,9 @@
 # iploc (IP Locator)
 
-The [17MON IP database](https://www.ipip.net) is being actively built from massive probing data, and is in return 
-widely used by Chinese Internet corporations. iploc provides a minimalistic set of C API that parses 17monipdb.dat 
-and searches for an IP's location infomation.
+The [17MON IP database](https://www.ipip.net) is widely adopted by Chinese Internet corporations. 
+It's being actively built and improved from massive probing data, so accuracy is advocated. 
+iploc provides a minimalistic set of C API that efficiently parses 17monipdb.dat and searches for an 
+IP's location infomation.
 
 ## Initiative
 
@@ -11,7 +12,7 @@ there've already been [official](https://www.ipip.net/download.html#ip_code) and
 [3rd-party](https://www.ipip.net/download.html#ip_code2) ones?
 
 * `The official C API is buggy and inefficient to some extent`
-* `The code of a 3rd-party C API investigated is badly tasted`
+* `Existing 3rd-party C/C++ APIs are badly tasted`
 
 ## Example
 
@@ -36,6 +37,5 @@ random_ip_bench:        5000000 ops     684.42 msec     136 nsec/op
 
 ## Note
 The 17monipdb.dat in this repo is for test purpose only, and it's probably outdated.
-For any real-world usage, you should buy the commercial version or download the free
-one from [official site](https://www.ipip.net).
+For any real-world usage, you should download the latest one from [official site](https://www.ipip.net).
 
