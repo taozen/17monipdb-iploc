@@ -156,7 +156,7 @@ static uint
 get_ip_val(const char *ipv4)
 {
     struct in_addr addr;
-    return inet_aton(ipv4, &addr) == 0 ? 0 : ntohl(addr.s_addr);
+    return inet_pton(AF_INET, ipv4, &addr) == 1 ? ntohl(addr.s_addr) : 0;
 }
 
 // ------------------------------------------------------------------
