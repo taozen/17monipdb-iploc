@@ -35,21 +35,35 @@ typedef struct _ip_db_t ip_db_t;
 ip_db_t* ip_db_init(const char *path);
 
 //
+// ip_db_init_x creates and then initializes an ip_db_t object using the
+// given 17MON DB file (extended version). The returned object must be
+// destroied via ip_db_destroy when no longer needed.
+//
+ip_db_t* ip_db_init_x(const char *path);
+
+//
 // ip_db_destroy destroies an ip_db_t object and reclaim all memory 
 // allocated underneath.
 //
 void ip_db_destroy(ip_db_t **db);
 
 //
-// ip_locate searches the specified IP in DB and copies its location 
+// ip_locate searches for the specified IP and copies its location 
 // description into the given result buffer if found.
 //
 int ip_locate(ip_db_t *db, const char *ipv4, char *result);
 
 //
-// ip_locate_v searches the specified IP (value in host representation)
-// in DB. If found, 0 is returned with its location description copied
-// into the given result buffer, -1 otherwise.
+// ip_locate_v searches for the specified IP (value in host representation).
+// If found, 0 is returned with its location description copied into the
+// given result buffer, -1 otherwise. Caller should make sure the result
+// buffer is large enough (256 for base version, 65536 for extended version).
 //
 int ip_locate_v(ip_db_t *db, uint32_t ip_val, char *result);
+
+//
+// ip_db_dump dumps the whole DB to stdout (meta info to stderr). You may
+// want to redirect the output to a file.
+//
+void ip_db_dump(ip_db_t *db);
 

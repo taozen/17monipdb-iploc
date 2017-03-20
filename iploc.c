@@ -32,6 +32,14 @@ typedef unsigned char byte;
 typedef uint32_t uint;
 
 // ------------------------------------------------------------------
+// Decodes a 2 bytes big endian number from a byte array.
+
+static inline uint decode_uint16_be(byte *b)
+{
+    return (b[0] << 8) | b[1];
+}
+
+// ------------------------------------------------------------------
 // Decodes a 4 bytes big endian number from a byte array.
 
 static inline uint decode_uint32_be(byte *b)
@@ -56,16 +64,87 @@ static inline uint decode_uint32_le(byte *b)
 }
 
 // ------------------------------------------------------------------
-// _ip_db_t holds meta-data of a 17MON DB data
+// _ip_db_t holds meta-data of a 17MON DB
 
 struct _ip_db_t
 {
-    uint hint[256]; // number of indexed IP in each IP segment
-    uint num_index; // total number of indexed IP in the DB
-    byte *raw;      // raw data copied from 17MON DB file
-    byte *index;    // pointer to the first index
-    byte *text;     // pointer to ip description section
+    byte extended;      // datx or dat?
+    uint hindex_size;   // size of the index of a hint
+    uint hint_size;     // size of bytes total hint area occupies
+    uint index_num;     // total number of indexed IP in the DB
+    uint index_size;    // size of an index chunk
+    uint *hint;         // hint for the number of indexed IP in each IP segment
+    byte *raw;          // raw data copied from 17MON DB file
+    byte *index;        // pointer to the first index
+    byte *text;         // pointer to ip description section
 };
+
+// ------------------------------------------------------------------
+// ip_db_hint_get_low returns the lower bound of the sequence of an
+// IP's index
+
+static uint
+ip_db_hint_get_low(ip_db_t *db, uint ip_val)
+{
+    // Index of the desired hint is equal to the first |hindex_size|
+    // octet(s) of the ip value.
+    uint hid = ip_val >> (8*(4-db->hindex_size));
+    return db->hint[hid];
+}
+
+// ------------------------------------------------------------------
+// ip_db_hint_get_high returns the upper bound of the sequence of an
+// IP's index
+
+static uint
+ip_db_hint_get_high(ip_db_t *db, uint ip_val)
+{
+    uint hid = ip_val >> (8*(4-db->hindex_size));
+    uint limit = (1 << (8*db->hindex_size)) - 1;
+    return (hid == limit ? db->index_num-1 : db->hint[hid+1]);
+}
+
+// ------------------------------------------------------------------
+// ip_db_index_get_ip returns the value of the nth-indexed IP
+
+static uint
+ip_db_index_get_ip(ip_db_t *db, uint n)
+{
+    byte *pos = db->index + n*db->index_size;
+    return decode_uint32_be(pos);
+}
+
+// ------------------------------------------------------------------
+// ip_db_index_get_offset returns the offset of the nth-indexed IP
+// against the text section
+
+static uint
+ip_db_index_get_offset(ip_db_t *db, uint n)
+{
+    byte *pos = db->index + n*db->index_size + 4;
+    return decode_uint24_le(pos);
+}
+
+// ------------------------------------------------------------------
+// ip_db_index_get_text_len returns the text length of the
+// nth-indexed IP
+
+static uint
+ip_db_index_get_text_len(ip_db_t *db, uint n)
+{
+    byte *pos = db->index + n*db->index_size + 7;
+    return db->extended ? decode_uint16_be(pos) : pos[0];
+}
+
+// ------------------------------------------------------------------
+// ip_db_get_text gets the pointer to the description text according
+// to the offset obtained from the index section.
+
+static const char*
+ip_db_get_text(ip_db_t *db, uint offset)
+{
+    return (const char*)(db->text + offset - db->hint_size);
+}
 
 // ------------------------------------------------------------------
 // Create an ip_db_t object with zero value.
@@ -86,19 +165,25 @@ ip_db_destroy(ip_db_t **db)
 {
     if (*db) {
         ip_db_t *p  = *db;
+
         if (p->raw) {
             free(p->raw);
         }
+
+        if (p->hint) {
+            free(p->hint);
+        }
+
         free(p);
         *db = NULL;
     }
 }
 
 // ------------------------------------------------------------------
-// Create and then initialize an ip_db_t object using a 17MON DB file.
+// Create and then initialize an ip_db_t object (implementation).
 
 ip_db_t*
-ip_db_init(const char *path)
+ip_db_init_impl(const char *path, byte extended)
 {
     FILE *fp = fopen(path, "rb");
 
@@ -132,20 +217,51 @@ ip_db_init(const char *path)
     }
 
     fclose(fp);
-    byte *pos = db->raw + 4;
-    int i = 0;
 
-    for (; i < 256; i++) {
+    uint hindex_size = extended ? 2 : 1;
+    db->hindex_size = hindex_size;
+    db->index_size = 4 + 3 + hindex_size;
+
+    uint hint_num = 1 << (hindex_size*8);
+    uint hint_size = sizeof(uint) * hint_num;
+    db->hint = malloc(hint_size);
+    db->hint_size = hint_size;
+
+    int i = 0;
+    byte *pos = db->raw + 4;
+    for (; i < hint_num; i++) {
         db->hint[i] = decode_uint32_le(pos);
         pos += 4;
     }
 
     uint text_offset = decode_uint32_be(db->raw);
-    db->num_index = (text_offset - 4 - 2048) / 8;
-    db->index = db->raw + 4 + 256 * 4;
     db->text = db->raw + text_offset;
+    db->index = db->raw + 4 + hint_size;
+
+    // There's a reserved area in the end of the index area. Its size
+    // is equal to |hint_size|.
+    db->index_num = ((db->text - db->index) - hint_size) / db->index_size;
 
     return db;
+}
+
+// ------------------------------------------------------------------
+// Create and then initialize an ip_db_t object using a 17MON DB file.
+
+ip_db_t*
+ip_db_init(const char *path)
+{
+    return ip_db_init_impl(path, 0);
+}
+
+// ------------------------------------------------------------------
+// Create and then initialize an ip_db_t object using an extended
+// 17MON DB file.
+
+ip_db_t*
+ip_db_init_x(const char *path)
+{
+    return ip_db_init_impl(path, 1);
 }
 
 // ------------------------------------------------------------------
@@ -180,17 +296,16 @@ ip_locate_v(ip_db_t *db, uint32_t ip_val, char *result)
         return -1;
     }
 
-    byte part1 = (ip_val >> 24);
-    uint low = db->hint[part1];
-    uint high = db->num_index - 1;
-
-    if (part1 < 255) {
-        high = db->hint[part1 + 1];
-    }
+    uint low = ip_db_hint_get_low(db, ip_val);
+    uint high = ip_db_hint_get_high(db, ip_val);
 
     while (low < high) {
         uint mid = low + (high - low)/2;
-        uint ip_indexed = decode_uint32_be(db->index + mid*8);
+        uint ip_indexed = ip_db_index_get_ip(db, mid);
+
+        // Why don't we handle the equal case? Take some probabilistic
+        // math and convince yourself this makes sense, or just google
+        // it.
 
         if (ip_val > ip_indexed) {
             low = mid + 1;
@@ -199,12 +314,43 @@ ip_locate_v(ip_db_t *db, uint32_t ip_val, char *result)
         }
     }
 
-    byte *pos = db->index + high*8;
-    uint offset = decode_uint24_le(pos + 4);
-    uint len = pos[7];
-    const char *src = (const char*)(db->text + offset - 1024);
-    strncpy(result, src, len);
+    uint offset = ip_db_index_get_offset(db, high);
+    uint len = ip_db_index_get_text_len(db, high);
+    const char *text = ip_db_get_text(db, offset);
+
+    strncpy(result, text, len);
     result[len] = 0;
     return 0;
+}
+
+// ------------------------------------------------------------------
+// Dump the whole DB to stdout.
+//
+
+void ip_db_dump(ip_db_t *db)
+{
+    fprintf(stderr, "extended=%u, index_num=%u\n", db->extended, db->index_num);
+
+    char buf[65536];
+    uint i = 0;
+
+    for (; i < db->index_num; ++i) {
+        uint ip_val = ip_db_index_get_ip(db, i);
+        struct in_addr in;
+        in.s_addr = htonl(ip_val);
+        char *ip = inet_ntoa(in);
+
+        uint offset = ip_db_index_get_offset(db, i);
+        uint len = ip_db_index_get_text_len(db, i);
+        const char *text = ip_db_get_text(db, offset);
+
+#ifdef DEBUG
+        printf("idx=%u,offset=%u,len=%u\n", i, offset, len);
+#endif
+        strncpy(buf, text, len);
+        buf[len] = 0;
+
+        printf("%s\t\t%s\n", ip, buf);
+    }
 }
 
