@@ -17,6 +17,13 @@ there've already been [official](https://www.ipip.net/download.html#ip_code) and
 ## Example
 
 ```c
+//
+// Use ip_db_init_x instead if you have an extended version
+// of 17MON IP DB file. Then the remaining part is the same.
+//
+// ip_db_t *ipdb = ip_db_init_x("17monipdb.datx");
+//
+
 ip_db_t *ipdb = ip_db_init("17monipdb.dat");
 
 char buf[256];
