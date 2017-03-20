@@ -35,7 +35,8 @@ ip_db_destroy(&ipdb);
 ```
 
 ## Benchmark
-
+CPU: 2.6 GHz Intel Core i5
+OS: Ubuntu 14.04 LTS
 ```
 $ make test
 8.8.8.8 -> GOOGLE       GOOGLE
