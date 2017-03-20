@@ -83,7 +83,7 @@ struct _ip_db_t
 // ip_db_hint_get_low returns the lower bound of the sequence of an
 // IP's index
 
-static uint
+static inline uint
 ip_db_hint_get_low(ip_db_t *db, uint ip_val)
 {
     // Index of the desired hint is equal to the first |hindex_size|
@@ -96,7 +96,7 @@ ip_db_hint_get_low(ip_db_t *db, uint ip_val)
 // ip_db_hint_get_high returns the upper bound of the sequence of an
 // IP's index
 
-static uint
+static inline uint
 ip_db_hint_get_high(ip_db_t *db, uint ip_val)
 {
     uint hid = ip_val >> (8*(4-db->hindex_size));
@@ -107,7 +107,7 @@ ip_db_hint_get_high(ip_db_t *db, uint ip_val)
 // ------------------------------------------------------------------
 // ip_db_index_get_ip returns the value of the nth-indexed IP
 
-static uint
+static inline uint
 ip_db_index_get_ip(ip_db_t *db, uint n)
 {
     byte *pos = db->index + n*db->index_size;
@@ -118,7 +118,7 @@ ip_db_index_get_ip(ip_db_t *db, uint n)
 // ip_db_index_get_offset returns the offset of the nth-indexed IP
 // against the text section
 
-static uint
+static inline uint
 ip_db_index_get_offset(ip_db_t *db, uint n)
 {
     byte *pos = db->index + n*db->index_size + 4;
@@ -129,7 +129,7 @@ ip_db_index_get_offset(ip_db_t *db, uint n)
 // ip_db_index_get_text_len returns the text length of the
 // nth-indexed IP
 
-static uint
+static inline uint
 ip_db_index_get_text_len(ip_db_t *db, uint n)
 {
     byte *pos = db->index + n*db->index_size + 7;
@@ -140,7 +140,7 @@ ip_db_index_get_text_len(ip_db_t *db, uint n)
 // ip_db_get_text gets the pointer to the description text according
 // to the offset obtained from the index section.
 
-static const char*
+static inline const char*
 ip_db_get_text(ip_db_t *db, uint offset)
 {
     return (const char*)(db->text + offset - db->hint_size);
@@ -268,7 +268,7 @@ ip_db_init_x(const char *path)
 // Get the host representation of an ipv4 address. Return 0 on 
 // malformed input.
 
-static uint
+static inline uint
 get_ip_val(const char *ipv4)
 {
     struct in_addr addr;
