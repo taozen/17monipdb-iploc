@@ -2,7 +2,7 @@
 
 The [17MON IP database](https://www.ipip.net) is widely adopted by Chinese Internet corporations. 
 It's being actively built and improved from massive probing data, so accuracy is advocated. 
-iploc provides a minimalistic set of C API that efficiently parses 17monipdb.dat and searches for an 
+iploc provides a minimalistic set of C API that efficiently parses 17monipdb.dat(x) and searches for an 
 IP's location infomation.
 
 ## Initiative
