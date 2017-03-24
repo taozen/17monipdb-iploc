@@ -12,7 +12,7 @@ there've already been [official](https://www.ipip.net/download.html#ip_code) and
 [3rd-party](https://www.ipip.net/download.html#ip_code2) ones?
 
 * `Elegent IP database deserves an elegent C API`
-* `None of the existing C/C++ APIs satisfies the critera above`  
+* `None of the existing C/C++ APIs satisfies the criteria above`  
 
 ## Example
 
