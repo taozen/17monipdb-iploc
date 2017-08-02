@@ -9,6 +9,9 @@ dump: iploc.o dump.c
 test-proc: iploc.o test.c
 	$(CC) test.c iploc.o -o test-proc
 
+query: iploc.o query.c
+	$(CC) query.c iploc.o -o query
+
 test: test-proc
 	./test-proc
 
