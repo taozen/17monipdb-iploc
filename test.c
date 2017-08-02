@@ -33,7 +33,7 @@ ip_db_t *ipdb;
 
 void test_basic(int argc, const char *argv[])
 {
-    char buf[256];
+    char buf[65536];
     if (ip_locate(ipdb, "8.8.8.8", buf) == 0) {
         printf("8.8.8.8 -> %s\n", buf);
     }
@@ -92,7 +92,18 @@ void random_ip_location(void *arg)
 int main(int argc, const char *argv[])
 {
     srand(time(0));
-    ipdb = ip_db_init("17monipdb.dat");
+
+    if (argc == 1) {
+        ipdb = ip_db_init("17monipdb.dat");
+    } else if (argc == 2) {
+        if (strcmp(argv[1], "-x") == 0) {
+            ipdb = ip_db_init_x("17monipdb.datx");
+        } else {
+            ipdb = ip_db_init(argv[1]);
+        }
+    } else if (argc == 3 && strcmp(argv[1], "-x") == 0) {
+        ipdb = ip_db_init_x(argv[2]);
+    }
 
     if (!ipdb) {
         fprintf(stderr, "Failed to init ip db");
