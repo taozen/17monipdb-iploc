@@ -300,24 +300,14 @@ ip_locate_v(ip_db_t *db, uint32_t ip_val, char *result)
     uint low = ip_db_hint_get_low(db, ip_val);
     uint high = ip_db_hint_get_high(db, ip_val);
 
-    if (db->extended) {
-        for (; low < high; ++low) {
-            if (ip_val <= ip_db_index_get_ip(db, low)) {
-                break;
-            }
-        }
+    while (low < high) {
+        uint mid = low + (high - low)/2;
+        uint ip_indexed = ip_db_index_get_ip(db, mid);
 
-        high = low;
-    } else {
-        while (low < high) {
-            uint mid = low + (high - low)/2;
-            uint ip_indexed = ip_db_index_get_ip(db, mid);
-
-            if (ip_val > ip_indexed) {
-                low = mid + 1;
-            } else {
-                high = mid;
-            }
+        if (ip_val > ip_indexed) {
+            low = mid + 1;
+        } else {
+            high = mid;
         }
     }
 
